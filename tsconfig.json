@@ -6,10 +6,10 @@
     "removeComments": false,
     "sourceMap": false,
     "outDir": "dist",
-    "target": "ES2017",
+    "target": "ES2018",
     "jsx": "react",
     "esModuleInterop": true,
-    "lib": ["ES2015", "DOM"],
+    "lib": ["ES2018", "DOM"],
     "moduleResolution": "node"
   },
   "include": ["src/**/*"],
