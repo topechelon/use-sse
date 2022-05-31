@@ -9,7 +9,7 @@ function useSSE(...args) {
   return hook(...args);
 }
 function createProvider(hook) {
-  return ({children}) => /* @__PURE__ */ React.createElement(Context.Provider, {
+  return ({ children }) => /* @__PURE__ */ React.createElement(Context.Provider, {
     value: hook
   }, children);
 }
@@ -18,9 +18,10 @@ function createBrowserContext(variableName = pageVariableName) {
   const pageData = pageVariable || {};
   let current = 0;
   const hook = (effect, dependencies, id) => {
-    const callId = id ?? current++;
-    const [data, setData] = React.useState(pageData[callId]?.data);
-    const [error, setError] = React.useState(pageData[callId]?.error);
+    var _a, _b;
+    const callId = id != null ? id : current++;
+    const [data, setData] = React.useState((_a = pageData[callId]) == null ? void 0 : _a.data);
+    const [error, setError] = React.useState((_b = pageData[callId]) == null ? void 0 : _b.error);
     React.useEffect(() => {
       if (pageData[callId]) {
         if (typeof callId !== "string") {
@@ -38,10 +39,10 @@ function createBrowserContext(variableName = pageVariableName) {
 }
 function createServerContext() {
   const pageData = {};
-  const requests = new Map();
+  const requests = /* @__PURE__ */ new Map();
   let current = 0;
   const hook = (effect, dependencies, id) => {
-    const callId = id ?? (current++).toString();
+    const callId = id != null ? id : (current++).toString();
     const activeRequest = requests.get(callId);
     const hookData = pageData[callId];
     if (activeRequest) {
@@ -56,10 +57,10 @@ function createServerContext() {
           resolve(null);
         });
       });
-      pageData[callId] = {count: 1};
+      pageData[callId] = { count: 1 };
       requests.set(callId, promise);
     }
-    return [hookData?.data, hookData?.error];
+    return [hookData == null ? void 0 : hookData.data, hookData == null ? void 0 : hookData.error];
   };
   const resolveData = async () => {
     current = 0;
@@ -70,7 +71,7 @@ function createServerContext() {
         return this.data;
       },
       toHtml(variableName = pageVariableName) {
-        return `<script>window.${variableName} = ${JSON.stringify(pageData)};</script>`;
+        return `<script>window.${variableName} = ${JSON.stringify(pageData)};<\/script>`;
       }
     };
   };
@@ -80,7 +81,7 @@ function createServerContext() {
   };
 }
 function createTestingContext() {
-  const active = new Set();
+  const active = /* @__PURE__ */ new Set();
   const hook = (effect, dependencies, id) => {
     const [data, setData] = React.useState();
     const [error, setError] = React.useState();

@@ -1,33 +1,32 @@
 var __create = Object.create;
 var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
 var __getProtoOf = Object.getPrototypeOf;
 var __hasOwnProp = Object.prototype.hasOwnProperty;
-var __getOwnPropNames = Object.getOwnPropertyNames;
-var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
-var __markAsModule = (target) => __defProp(target, "__esModule", {value: true});
 var __export = (target, all) => {
   for (var name in all)
-    __defProp(target, name, {get: all[name], enumerable: true});
+    __defProp(target, name, { get: all[name], enumerable: true });
 };
-var __exportStar = (target, module2, desc) => {
-  if (module2 && typeof module2 === "object" || typeof module2 === "function") {
-    for (let key of __getOwnPropNames(module2))
-      if (!__hasOwnProp.call(target, key) && key !== "default")
-        __defProp(target, key, {get: () => module2[key], enumerable: !(desc = __getOwnPropDesc(module2, key)) || desc.enumerable});
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
   }
-  return target;
+  return to;
 };
-var __toModule = (module2) => {
-  return __exportStar(__markAsModule(__defProp(module2 != null ? __create(__getProtoOf(module2)) : {}, "default", module2 && module2.__esModule && "default" in module2 ? {get: () => module2.default, enumerable: true} : {value: module2, enumerable: true})), module2);
-};
-__markAsModule(exports);
-__export(exports, {
+var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target, mod));
+var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+var src_exports = {};
+__export(src_exports, {
   createBrowserContext: () => createBrowserContext,
   createServerContext: () => createServerContext,
   createTestingContext: () => createTestingContext,
   useSSE: () => useSSE
 });
-var import_react = __toModule(require("react"));
+module.exports = __toCommonJS(src_exports);
+var import_react = __toESM(require("react"));
 const pageVariableName = "_initialDataContext";
 const Context = import_react.default.createContext(null);
 function useSSE(...args) {
@@ -38,7 +37,7 @@ function useSSE(...args) {
   return hook(...args);
 }
 function createProvider(hook) {
-  return ({children}) => /* @__PURE__ */ import_react.default.createElement(Context.Provider, {
+  return ({ children }) => /* @__PURE__ */ import_react.default.createElement(Context.Provider, {
     value: hook
   }, children);
 }
@@ -47,9 +46,10 @@ function createBrowserContext(variableName = pageVariableName) {
   const pageData = pageVariable || {};
   let current = 0;
   const hook = (effect, dependencies, id) => {
-    const callId = id ?? current++;
-    const [data, setData] = import_react.default.useState(pageData[callId]?.data);
-    const [error, setError] = import_react.default.useState(pageData[callId]?.error);
+    var _a, _b;
+    const callId = id != null ? id : current++;
+    const [data, setData] = import_react.default.useState((_a = pageData[callId]) == null ? void 0 : _a.data);
+    const [error, setError] = import_react.default.useState((_b = pageData[callId]) == null ? void 0 : _b.error);
     import_react.default.useEffect(() => {
       if (pageData[callId]) {
         if (typeof callId !== "string") {
@@ -67,10 +67,10 @@ function createBrowserContext(variableName = pageVariableName) {
 }
 function createServerContext() {
   const pageData = {};
-  const requests = new Map();
+  const requests = /* @__PURE__ */ new Map();
   let current = 0;
   const hook = (effect, dependencies, id) => {
-    const callId = id ?? (current++).toString();
+    const callId = id != null ? id : (current++).toString();
     const activeRequest = requests.get(callId);
     const hookData = pageData[callId];
     if (activeRequest) {
@@ -85,10 +85,10 @@ function createServerContext() {
           resolve(null);
         });
       });
-      pageData[callId] = {count: 1};
+      pageData[callId] = { count: 1 };
       requests.set(callId, promise);
     }
-    return [hookData?.data, hookData?.error];
+    return [hookData == null ? void 0 : hookData.data, hookData == null ? void 0 : hookData.error];
   };
   const resolveData = async () => {
     current = 0;
@@ -99,7 +99,7 @@ function createServerContext() {
         return this.data;
       },
       toHtml(variableName = pageVariableName) {
-        return `<script>window.${variableName} = ${JSON.stringify(pageData)};</script>`;
+        return `<script>window.${variableName} = ${JSON.stringify(pageData)};<\/script>`;
       }
     };
   };
@@ -109,7 +109,7 @@ function createServerContext() {
   };
 }
 function createTestingContext() {
-  const active = new Set();
+  const active = /* @__PURE__ */ new Set();
   const hook = (effect, dependencies, id) => {
     const [data, setData] = import_react.default.useState();
     const [error, setError] = import_react.default.useState();
