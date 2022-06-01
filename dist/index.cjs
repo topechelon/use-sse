@@ -18,6 +18,8 @@ var __copyProps = (to, from, except, desc) => {
 };
 var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target, mod));
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+
+// src/index.tsx
 var src_exports = {};
 __export(src_exports, {
   createBrowserContext: () => createBrowserContext,
@@ -26,9 +28,10 @@ __export(src_exports, {
   useSSE: () => useSSE
 });
 module.exports = __toCommonJS(src_exports);
+
+// src/hook.tsx
 var import_react = __toESM(require("react"));
-const pageVariableName = "_initialDataContext";
-const Context = import_react.default.createContext(null);
+var Context = import_react.default.createContext(null);
 function useSSE(...args) {
   const hook = import_react.default.useContext(Context);
   if (!hook) {
@@ -41,89 +44,99 @@ function createProvider(hook) {
     value: hook
   }, children);
 }
-function createBrowserContext(variableName = pageVariableName) {
-  const pageVariable = window && window[variableName];
-  const pageData = pageVariable || {};
-  let current = 0;
-  const hook = (effect, dependencies, id) => {
-    var _a, _b;
-    const callId = id != null ? id : current++;
-    const [data, setData] = import_react.default.useState((_a = pageData[callId]) == null ? void 0 : _a.data);
-    const [error, setError] = import_react.default.useState((_b = pageData[callId]) == null ? void 0 : _b.error);
-    import_react.default.useEffect(() => {
-      if (pageData[callId]) {
-        if (typeof callId !== "string") {
-          if (!pageData[callId].count || --pageData[callId].count <= 0) {
-            delete pageData[callId];
+
+// src/browser.ts
+var import_react2 = __toESM(require("react"));
+function createBrowserContext(variableName = "_initialDataContext") {
+  var _a;
+  const resolvedData = (_a = window[variableName]) != null ? _a : {};
+  let counter = 0;
+  return createProvider((effect, dependencies, id) => {
+    var _a2, _b;
+    const promiseId = id != null ? id : counter++;
+    const [data, setData] = import_react2.default.useState((_a2 = resolvedData[promiseId]) == null ? void 0 : _a2.data);
+    const [error, setError] = import_react2.default.useState((_b = resolvedData[promiseId]) == null ? void 0 : _b.error);
+    import_react2.default.useEffect(() => {
+      if (resolvedData[promiseId]) {
+        if (typeof promiseId !== "string") {
+          if (!resolvedData[promiseId].count || --resolvedData[promiseId].count <= 0) {
+            delete resolvedData[promiseId];
           }
         }
       } else {
-        effect().then((res) => setData(res)).catch((error2) => setError(error2));
+        triggerEffect();
       }
     }, dependencies);
-    return [data, error];
-  };
-  return createProvider(hook);
-}
-function createServerContext() {
-  const pageData = {};
-  const requests = /* @__PURE__ */ new Map();
-  let current = 0;
-  const hook = (effect, dependencies, id) => {
-    const callId = id != null ? id : (current++).toString();
-    const activeRequest = requests.get(callId);
-    const hookData = pageData[callId];
-    if (activeRequest) {
-      ++hookData.count;
-    } else {
-      const promise = new Promise((resolve) => {
-        return effect().then((data) => {
-          pageData[callId].data = data;
-          resolve(data);
-        }).catch((error) => {
-          pageData[callId].error = error;
-          resolve(null);
-        });
-      });
-      pageData[callId] = { count: 1 };
-      requests.set(callId, promise);
+    async function triggerEffect() {
+      try {
+        setData(await effect());
+      } catch (error2) {
+        setError(error2);
+      }
     }
-    return [hookData == null ? void 0 : hookData.data, hookData == null ? void 0 : hookData.error];
-  };
-  const resolveData = async () => {
-    current = 0;
-    await Promise.all(Array.from(requests.values()));
+    return [data, error];
+  });
+}
+
+// src/server.ts
+function createServerContext() {
+  const resolvedData = {};
+  const promises = /* @__PURE__ */ new Map();
+  let counter = 0;
+  const ServerDataContext = createProvider((effect, dependencies, id) => {
+    const promiseId = id != null ? id : (counter++).toString();
+    const resolved = resolvedData[promiseId];
+    if (promises.get(promiseId)) {
+      ++resolved.count;
+    } else {
+      async function triggerEffect() {
+        try {
+          return resolvedData[promiseId].data = await effect();
+        } catch (error) {
+          resolvedData[promiseId].error = error;
+          return null;
+        }
+      }
+      resolvedData[promiseId] = { count: 1 };
+      promises.set(promiseId, triggerEffect());
+    }
+    return [resolved == null ? void 0 : resolved.data, resolved == null ? void 0 : resolved.error];
+  });
+  async function resolveData() {
+    counter = 0;
+    await Promise.all(Array.from(promises.values()));
     return {
-      data: pageData,
-      toJSON() {
-        return this.data;
-      },
-      toHtml(variableName = pageVariableName) {
-        return `<script>window.${variableName} = ${JSON.stringify(pageData)};<\/script>`;
+      data: resolvedData,
+      toHtml(variableName = "_initialDataContext") {
+        return `<script>window.${variableName} = ${JSON.stringify(resolvedData)};<\/script>`;
       }
     };
-  };
-  return {
-    ServerDataContext: createProvider(hook),
-    resolveData
-  };
+  }
+  return { ServerDataContext, resolveData };
 }
+
+// src/testing.ts
+var import_react3 = __toESM(require("react"));
 function createTestingContext() {
-  const active = /* @__PURE__ */ new Set();
-  const hook = (effect, dependencies, id) => {
-    const [data, setData] = import_react.default.useState();
-    const [error, setError] = import_react.default.useState();
-    import_react.default.useEffect(() => {
-      const promise = effect().then((res) => setData(res)).catch((error2) => setError(error2)).finally(() => active.delete(promise));
-      active.add(promise);
+  const promises = /* @__PURE__ */ new Set();
+  const ServerDataContext = createProvider((effect, dependencies, id) => {
+    const [data, setData] = import_react3.default.useState();
+    const [error, setError] = import_react3.default.useState();
+    import_react3.default.useEffect(() => {
+      const promise = triggerEffect().finally(() => promises.delete(promise));
+      promises.add(promise);
     }, dependencies);
+    async function triggerEffect() {
+      try {
+        setData(await effect());
+      } catch (error2) {
+        setError(error2);
+      }
+    }
     return [data, error];
-  };
-  const resolveData = async () => {
-    await Promise.all(Array.from(active));
-  };
-  return {
-    ServerDataContext: createProvider(hook),
-    resolveData
-  };
+  });
+  async function resolveData() {
+    await Promise.all(Array.from(promises));
+  }
+  return { ServerDataContext, resolveData };
 }
